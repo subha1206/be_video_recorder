@@ -59,6 +59,6 @@ app.post('/upload-video', (req, res) => {
     .catch((err) => res.json(err));
 });
 
-app.listen(8080, function () {
-  console.log('Running App on Port ' + 8080);
+app.listen(process.env.PORT, function () {
+  console.log('Running App on Port ' + process.env.PORT);
 });
