@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-// import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const ImageKit = require('imagekit');
 const fileupload = require('express-fileupload');
@@ -13,20 +13,12 @@ app.use(fileupload());
 app.use(cors());
 app.use(helmet());
 
-// const mongo = mongoose.connect(process.env.MONGO_URL, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
+const videoStorageSchema = new mongoose.Schema({
+  url: String,
+  thumbnail: String,
+});
 
-// mongo
-//   .then(() => {
-//     app.listen(port, function () {
-//       console.log('Running App on Port ' + port);
-//     });
-//   })
-//   .catch((err) => {
-//     process.exit();
-//   });
+const VideoStorageModel = mongoose.model('VideoStorage', videoStorageSchema);
 
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
@@ -34,13 +26,23 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGE_KIT_URL,
 });
 
-app.get('/upload-video', (req, res) => {
-  res.send('url ready for work');
+const mongo = mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-  // imagekit.upload({
-  //   file: 'https://ik.imagekit.io/ikmedia/red_dress_woman.jpeg',
-  //   fileName: 'women_in_red.jpg',
-  // });
+app.get('/upload-video', (req, res) => {
+  VideoStorageModel.find({}, (err, videos) => {
+    if (err) {
+      res.status(400).json({ message: 'Erorr', data: { err } });
+    }
+    res.status(200).json({
+      message: 'Success',
+      data: {
+        videos: videos,
+      },
+    });
+  });
 });
 
 app.post('/upload-video', (req, res) => {
@@ -50,15 +52,26 @@ app.post('/upload-video', (req, res) => {
       fileName: req.files.video_file.name,
     })
     .then((result) => {
-      res.status(200).json({
-        message: 'Success',
+      VideoStorageModel.create({
         url: result.url,
-        thumbnil: result.thumbnailUrl,
+        thumbnail: result.thumbnailUrl,
+      }).then((mongoRes) => {
+        res.status(200).json({
+          message: 'Success',
+          url: mongoRes.url,
+          thumbnil: mongoRes.thumbnail,
+        });
       });
     })
     .catch((err) => res.json(err));
 });
 
-app.listen(process.env.PORT, function () {
-  console.log('Running App on Port ' + process.env.PORT);
-});
+mongo
+  .then(() => {
+    app.listen(process.env.PORT, function () {
+      console.log('Running restAPI on Port ' + process.env.PORT);
+    });
+  })
+  .catch((err) => {
+    process.exit();
+  });
