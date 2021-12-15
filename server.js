@@ -63,7 +63,9 @@ app.post('/upload-video', (req, res) => {
         });
       });
     })
-    .catch((err) => res.json(err));
+    .catch((err) => {
+      res.send('error');
+    });
 });
 
 mongo
@@ -73,5 +75,6 @@ mongo
     });
   })
   .catch((err) => {
+    console.log(err);
     process.exit();
   });
