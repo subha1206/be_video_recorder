@@ -52,14 +52,10 @@ app.get('/upload-video', (req, res) => {
 });
 
 app.post('/upload-video', upload.single('video_file'), (req, res) => {
-  // const videoData = req.file.buffer;
-
-  console.log(req.file);
-
   imagekit
     .upload({
       file: req.file.buffer,
-      fileName: req.file.fieldname,
+      fileName: `${req.file.fieldname}.${req.file.mimetype.split('/')[1]}`,
     })
     .then((result) => {
       VideoStorageModel.create({
