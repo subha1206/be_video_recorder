@@ -3,13 +3,19 @@ const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const ImageKit = require('imagekit');
-const fileupload = require('express-fileupload');
 dotenv.config();
+const ImageKit = require('imagekit');
+// const fileupload = require('express-fileupload');
+const multer = require('multer');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 },
+});
 
 const app = express();
 
-app.use(fileupload());
+// app.use(fileupload());
 app.use(cors());
 app.use(helmet());
 
@@ -45,11 +51,15 @@ app.get('/upload-video', (req, res) => {
   });
 });
 
-app.post('/upload-video', (req, res) => {
+app.post('/upload-video', upload.single('video_file'), (req, res) => {
+  // const videoData = req.file.buffer;
+
+  console.log(req.file);
+
   imagekit
     .upload({
-      file: req.files.video_file.data,
-      fileName: req.files.video_file.name,
+      file: req.file.buffer,
+      fileName: req.file.fieldname,
     })
     .then((result) => {
       VideoStorageModel.create({
