@@ -46,7 +46,6 @@ app.get('/upload-video', (req, res) => {
 });
 
 app.post('/upload-video', (req, res) => {
-  console.log(req.files.video_file);
   imagekit
     .upload({
       file: req.files.video_file.data,
